@@ -1,30 +1,15 @@
-FROM ubuntu:trusty
+FROM alpine:3.4
+
 MAINTAINER Takanobu Izukawa "takanobu@izukawa.org"
 
-ENV DEBIAN_FRONTEND noninteractive
+RUN apk add nodejs --no-progress --no-cache
 
-# we need aptitude! not apt!
-RUN apt-get install -y aptitude
-ADD /sources.list /etc/apt/sources.list
-RUN aptitude update && aptitude safe-upgrade -y
-
-# install common tools.
-RUN aptitude install -y build-essential git
-
-# install node js.
-RUN aptitude install -y nodejs npm
-WORKDIR /usr/bin
-RUN ln -s nodejs node
-
-ENV DEBIAN_FRONTEND dialog
-
-# setup project.
-ADD /www /var/www
+COPY www /var/www
 WORKDIR /var/www
-RUN npm install .
-RUN npm install forever coffee-script -g
+RUN npm install . && npm install coffee-script -g && npm cache clean
+ENV NODE_ENV=production
+
 EXPOSE 3000
 
-# wakeup server process.
-CMD NODE_ENV=production forever -c coffee app.coffee
+ENTRYPOINT ["coffee", "app.coffee"]
 
